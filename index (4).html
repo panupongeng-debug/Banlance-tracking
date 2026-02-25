@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href='data:application/json,{"name":"Debt Tracker Pro","short_name":"DebtFree","start_url":".","display":"standalone","background_color":"#0f172a","theme_color":"#0f172a","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/2489/2489756.png","sizes":"512x512","type":"image/png"}]}'>
+
+    <title>Debt Tracker Pro</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap');
+        body { 
+            font-family: 'Kanit', sans-serif; 
+            background-color: #f8fafc; 
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        .tab-active { border-bottom: 4px solid #10b981; color: #10b981; font-weight: bold; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .card-shadow { box-shadow: 0 4px 25px -5px rgba(0,0,0,0.06); }
+        .checked-item { opacity: 0.5; text-decoration: line-through; filter: grayscale(1); transform: scale(0.96); }
+        .achievement-gradient { background: linear-gradient(135deg, #059669 0%, #10b981 100%); }
+        input[type="number"] { -moz-appearance: textfield; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .bottom-nav { padding-bottom: env(safe-area-inset-bottom); }
+    </style>
+</head>
+<body class="pb-48">
+
+    <div class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b overflow-x-auto no-scrollbar flex space-x-6 px-6 py-4 text-xs text-gray-400" id="month-tabs"></div>
+
+    <div class="bg-slate-900 text-white shadow-2xl mx-4 mt-4 rounded-[2.5rem] p-7 border-b-8 border-emerald-500 card-shadow relative overflow-hidden">
+        <div class="relative z-10">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <p class="text-[10px] opacity-50 uppercase tracking-[0.2em]">เงินสะสมคงเหลือ</p>
+                    <p class="text-4xl font-bold text-emerald-400" id="acc-balance">0</p>
+                </div>
+                <div class="text-right">
+                    <p id="display-date" class="font-bold text-slate-400 text-sm"></p>
+                    <p class="text-[9px] text-amber-500 mt-1 font-bold">BUDGET OPTIMIZED</p>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-2 text-[11px] border-t border-white/10 pt-5">
+                <div class="text-center border-r border-white/10">
+                    <p class="opacity-50 mb-1 font-light">เงินยกมา</p>
+                    <p id="prev-carry" class="font-bold text-emerald-200 text-sm">0</p>
+                </div>
+                <div class="text-center border-r border-white/10">
+                    <p class="opacity-50 mb-1 font-light">รายรับรวม</p>
+                    <p id="total-this-month-income" class="font-bold text-blue-300 text-sm">0</p>
+                </div>
+                <div class="text-center">
+                    <p class="opacity-50 mb-1 font-light">รายจ่ายรวม</p>
+                    <p id="total-out" class="font-bold text-rose-400 text-sm">0</p>
+                </div>
+            </div>
+        </div>
+        <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+    </div>
+
+    <div class="mx-4 mt-4 achievement-gradient rounded-3xl p-5 shadow-lg text-white flex justify-between items-center transition-transform active:scale-95">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                <i class="fa-solid fa-trophy text-yellow-300 text-xl"></i>
+            </div>
+            <div>
+                <p class="text-[10px] opacity-80 uppercase font-bold tracking-widest">หนี้ที่ปลดไปแล้วสะสม</p>
+                <p id="total-reduced" class="text-2xl font-bold tracking-tight">0</p>
+            </div>
+        </div>
+        <div class="text-right opacity-40">
+            <i class="fa-solid fa-chart-line text-2xl"></i>
+        </div>
+    </div>
+
+    <div class="max-w-md mx-auto px-4 mt-6 space-y-6">
+        
+        <div class="bg-white p-6 rounded-[2rem] card-shadow space-y-4">
+            <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                <span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> รายรับ
+            </h3>
+            <div class="grid grid-cols-2 gap-6">
+                <div class="space-y-1">
+                    <label class="text-[10px] text-slate-400 ml-1">เงินเดือน/รายรับประจำ</label>
+                    <input type="number" id="in-regular" oninput="saveData()" class="text-lg font-bold w-full bg-slate-50 p-3 rounded-2xl outline-none focus:ring-2 focus:ring-slate-100 transition-all">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] text-blue-500 ml-1">พิเศษ/โบนัส</label>
+                    <input type="number" id="in-special" oninput="saveData()" class="text-lg font-bold w-full bg-blue-50/50 p-3 rounded-2xl outline-none text-blue-600 focus:ring-2 focus:ring-blue-100 transition-all">
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-[2rem] card-shadow space-y-4">
+            <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                <span class="w-1.5 h-1.5 bg-rose-500 rounded-full"></span> รายจ่ายคงที่
+            </h3>
+            <div class="space-y-3">
+                <div class="flex justify-between items-center p-1">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500"><i class="fa-solid fa-car"></i></div>
+                        <span class="text-sm font-semibold text-slate-700">ค่างวดรถ</span>
+                    </div>
+                    <input type="number" id="fix-car" oninput="saveData()" class="text-right font-bold text-slate-800 w-24 outline-none text-lg bg-transparent">
+                </div>
+                <div class="flex justify-between items-center p-1">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500"><i class="fa-solid fa-house-chimney"></i></div>
+                        <span class="text-sm font-semibold text-slate-700">ธอส. (ต่อเติม)</span>
+                    </div>
+                    <input type="number" id="fix-house" oninput="saveData()" class="text-right font-bold text-slate-800 w-24 outline-none text-lg bg-transparent">
+                </div>
+                <div class="flex justify-between items-center bg-amber-50/60 p-4 rounded-2xl">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-white"><i class="fa-solid fa-wallet"></i></div>
+                        <div>
+                            <span class="text-sm font-bold text-amber-800 block">กินใช้/ประกัน</span>
+                            <span class="text-[9px] text-amber-600 font-bold uppercase tracking-widest">Optimized Plan</span>
+                        </div>
+                    </div>
+                    <input type="number" id="fix-personal" oninput="saveData()" class="text-right font-bold text-amber-700 w-24 bg-transparent outline-none text-xl">
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-end px-2 pt-2">
+            <div>
+                <h2 class="text-lg font-bold text-slate-800 tracking-tight">รายการหนี้หมุนเวียน</h2>
+                <p class="text-[10px] text-slate-400 font-bold uppercase">ติ๊กเพื่อเก็บยอด Achievement</p>
+            </div>
+            <button onclick="addItem()" class="bg-emerald-500 text-white text-[11px] font-bold px-5 py-2.5 rounded-2xl shadow-lg shadow-emerald-200 active:scale-90 transition-all">+ เพิ่มรายการ</button>
+        </div>
+        <div id="item-list" class="space-y-3"></div>
+    </div>
+
+    <div class="fixed bottom-0 left-0 right-0 p-6 bg-white/80 backdrop-blur-xl border-t border-slate-100 flex justify-between items-center z-50 bottom-nav">
+        <div class="flex flex-col">
+            <p class="text-[9px] text-slate-400 uppercase font-black tracking-widest mb-1">Monthly Cash Flow</p>
+            <p id="month-cf" class="text-2xl font-black tracking-tighter">0</p>
+        </div>
+        <div class="flex gap-3">
+            <button onclick="location.reload()" class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center active:bg-slate-200 transition-all"><i class="fa-solid fa-rotate-right"></i></button>
+            <button onclick="if(confirm('ยืนยันการรีเซ็ตข้อมูลทั้งหมด?')) { localStorage.removeItem('debtProDB'); location.reload(); }" class="bg-slate-800 text-white px-6 rounded-2xl font-bold text-sm active:scale-95 transition-all">RESET</button>
+        </div>
+    </div>
+
+    <script>
+        const monthNames = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+        const timeline = [];
+        for(let y=2569; y<=2570; y++) monthNames.forEach((m, i) => timeline.push({ y, m: i, name: m + ' ' + (y%100) }));
+
+        let currentIdx = 1; 
+        let db = JSON.parse(localStorage.getItem('debtProDB')) || {};
+
+        function getDefaults(idx) {
+            const y = timeline[idx].y; const m = timeline[idx].m;
+            let reg = 56000; let spec = 0; let fHouse = 3400; let fPers = 17000;
+            let fCar = (y === 2570 && m >= 1) ? 0 : 12000;
+            let items = [
+                {n: "A-money", v: 9300, c: false}, 
+                {n: "ออมสิน", v: 6800, c: false}, 
+                {n: "Kashjoy", v: 2500, c: false}, 
+                {n: "กรุงไทย", v: 2300, c: false}, 
+                {n: "Promise", v: 2193, c: false}
+            ];
+            // Money Hub Logic 2400
+            if ((y === 2569 && m >= 1) || (y === 2570 && m === 0)) { 
+                if (!(y === 2569 && m >= 11)) items.push({n: "Money Hub (ขั้นต่ำ)", v: 2400, c: false}); 
+            }
+            if(y === 2569 && m === 1) { spec = 86764; items.unshift({n: "ปิด Paynext", v: 40000, c: false}); }
+            if(y === 2569 && m === 2) items.push({n: "ค่าเทอม", v: 20000, c: false});
+            if(y === 2569 && m === 11) { spec = 73660; items.push({n: "🔥 ปิด Money Hub", v: 30000, c: false}); }
+            if(y === 2570 && m === 1) { spec = 103124; items.push({n: "🔥 ปิด Promise", v: 70000, c: false}); }
+            if(y === 2570 && m >= 6) reg = 70000;
+            return { reg, spec, fCar, fHouse, fPers, items };
+        }
+
+        function render() {
+            const tabs = document.getElementById('month-tabs');
+            tabs.innerHTML = '';
+            timeline.forEach((t, i) => {
+                const b = document.createElement('button');
+                b.className = `flex-shrink-0 pb-1 ${i === currentIdx ? 'tab-active' : ''}`;
+                b.innerText = t.name;
+                b.onclick = () => { currentIdx = i; render(); };
+                tabs.appendChild(b);
+            });
+
+            document.getElementById('display-date').innerText = timeline[currentIdx].name;
+            let carry = 0; let totalReduced = 0;
+
+            timeline.forEach((t, i) => {
+                const key = `${t.y}-${t.m}`;
+                if(!db[key]) db[key] = getDefaults(i);
+                
+                // Achievement Calculation
+                db[key].items.forEach(item => { if(item.c) totalReduced += item.v; });
+                
+                const debtSum = db[key].items.reduce((s, x) => s + x.v, 0);
+                const fixSum = (db[key].fCar || 0) + (db[key].fHouse || 0) + (db[key].fPers || 0);
+                const totalInc = db[key].reg + (db[key].spec || 0);
+                const net = totalInc - fixSum - debtSum;
+
+                if(i === currentIdx) {
+                    document.getElementById('in-regular').value = db[key].reg;
+                    document.getElementById('in-special').value = db[key].spec || 0;
+                    document.getElementById('fix-car').value = db[key].fCar;
+                    document.getElementById('fix-house').value = db[key].fHouse;
+                    document.getElementById('fix-personal').value = db[key].fPers;
+                    document.getElementById('prev-carry').innerText = Math.round(carry).toLocaleString();
+                    document.getElementById('total-this-month-income').innerText = totalInc.toLocaleString();
+                    document.getElementById('total-out').innerText = Math.round(fixSum + debtSum).toLocaleString();
+                    
+                    const bal = carry + net;
+                    const balEl = document.getElementById('acc-balance');
+                    balEl.innerText = Math.round(bal).toLocaleString();
+                    balEl.className = bal >= 0 ? 'text-4xl font-bold text-emerald-400' : 'text-4xl font-bold text-rose-500';
+
+                    const cfEl = document.getElementById('month-cf');
+                    cfEl.innerText = (net >= 0 ? '+' : '') + Math.round(net).toLocaleString();
+                    cfEl.className = net >= 0 ? 'text-2xl font-black text-emerald-600' : 'text-2xl font-black text-rose-500';
+
+                    renderItems(db[key].items);
+                }
+                carry += net;
+            });
+            document.getElementById('total-reduced').innerText = Math.round(totalReduced).toLocaleString();
+            localStorage.setItem('debtProDB', JSON.stringify(db));
+        }
+
+        function renderItems(items) {
+            const list = document.getElementById('item-list');
+            list.innerHTML = '';
+            items.forEach((item, idx) => {
+                list.innerHTML += `
+                    <div class="bg-white p-4 rounded-[1.5rem] shadow-sm flex justify-between items-center border border-slate-50 transition-all ${item.c ? 'checked-item' : 'active:scale-98'}">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div onclick="toggleCheck(${idx})" class="w-8 h-8 rounded-full border-2 ${item.c ? 'bg-emerald-500 border-emerald-500' : 'border-slate-200'} flex items-center justify-center cursor-pointer transition-all">
+                                ${item.c ? '<i class="fa-solid fa-check text-white text-[10px]"></i>' : ''}
+                            </div>
+                            <div class="flex-1">
+                                <input type="text" onchange="editItem(${idx}, 'n', this.value)" value="${item.n}" class="text-[9px] font-black text-slate-400 block bg-transparent outline-none uppercase tracking-widest">
+                                <input type="number" onchange="editItem(${idx}, 'v', this.value)" value="${item.v}" class="text-lg font-bold text-slate-700 bg-transparent outline-none w-full">
+                            </div>
+                        </div>
+                        <button onclick="removeItem(${idx})" class="text-slate-200 hover:text-rose-400 p-2"><i class="fa-solid fa-circle-xmark text-xl"></i></button>
+                    </div>
+                `;
+            });
+        }
+
+        function toggleCheck(idx) {
+            const key = `${timeline[currentIdx].y}-${timeline[currentIdx].m}`;
+            db[key].items[idx].c = !db[key].items[idx].c;
+            if (window.navigator.vibrate) window.navigator.vibrate(50);
+            render();
+        }
+
+        function saveData() {
+            const key = `${timeline[currentIdx].y}-${timeline[currentIdx].m}`;
+            db[key].reg = parseFloat(document.getElementById('in-regular').value) || 0;
+            db[key].spec = parseFloat(document.getElementById('in-special').value) || 0;
+            db[key].fCar = parseFloat(document.getElementById('fix-car').value) || 0;
+            db[key].fHouse = parseFloat(document.getElementById('fix-house').value) || 0;
+            db[key].fPers = parseFloat(document.getElementById('fix-personal').value) || 0;
+            render();
+        }
+
+        function editItem(idx, f, v) {
+            const key = `${timeline[currentIdx].y}-${timeline[currentIdx].m}`;
+            db[key].items[idx][f] = (f === 'v') ? parseFloat(v) || 0 : v;
+            render();
+        }
+
+        function addItem() {
+            const key = `${timeline[currentIdx].y}-${timeline[currentIdx].m}`;
+            db[key].items.push({n: "รายการใหม่", v: 0, c: false});
+            render();
+        }
+
+        function removeItem(idx) {
+            const key = `${timeline[currentIdx].y}-${timeline[currentIdx].m}`;
+            db[key].items.splice(idx, 1);
+            render();
+        }
+
+        // Service Worker for Android PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('data:application/javascript,self.addEventListener("fetch", function(e){})');
+        }
+
+        render();
+    </script>
+</body>
+</html>

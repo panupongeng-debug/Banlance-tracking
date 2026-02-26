@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Debt Tracker Pro</title>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2489/2489756.png">
@@ -31,7 +33,7 @@
                 </div>
                 <div class="text-right">
                     <p id="display-date" class="font-bold text-slate-400 text-sm"></p>
-                    <p class="text-[9px] text-amber-500 mt-1 font-bold">BUDGET OPTIMIZED</p>
+                    <p class="text-[9px] text-amber-500 mt-1 font-bold tracking-widest">BUDGET OPTIMIZED</p>
                 </div>
             </div>
             <div class="grid grid-cols-3 gap-2 text-[11px] border-t border-white/10 pt-5 text-center">
@@ -63,16 +65,39 @@
         </div>
     </div>
 
-    <div class="max-w-md mx-auto px-4 mt-6 space-y-6" id="app-content">
+    <div class="max-w-md mx-auto px-4 mt-6 space-y-6">
+        <div class="bg-white p-6 rounded-[2rem] card-shadow space-y-4">
+            <div class="grid grid-cols-2 gap-6">
+                <div>
+                    <label class="text-[10px] text-slate-400">รายรับประจำ</label>
+                    <input type="number" id="in-regular" oninput="saveData()" class="text-lg font-bold w-full bg-slate-50 p-3 rounded-2xl outline-none">
+                </div>
+                <div>
+                    <label class="text-[10px] text-blue-500">โบนัส/พิเศษ</label>
+                    <input type="number" id="in-special" oninput="saveData()" class="text-lg font-bold w-full bg-blue-50/50 p-3 rounded-2xl outline-none text-blue-600">
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-[2rem] card-shadow space-y-3">
+             <div class="flex justify-between items-center"><span class="text-sm">ค่างวดรถ</span><input type="number" id="fix-car" oninput="saveData()" class="text-right font-bold w-24 outline-none"></div>
+             <div class="flex justify-between items-center"><span class="text-sm">ธอส.</span><input type="number" id="fix-house" oninput="saveData()" class="text-right font-bold w-24 outline-none"></div>
+             <div class="flex justify-between items-center bg-amber-50 p-3 rounded-xl"><span class="text-sm font-bold text-amber-800">กินใช้/ประกัน</span><input type="number" id="fix-personal" oninput="saveData()" class="text-right font-bold w-24 bg-transparent outline-none"></div>
+        </div>
+
+        <div class="flex justify-between items-end px-2">
+            <h2 class="text-lg font-bold text-slate-800">รายการหนี้</h2>
+            <button onclick="addItem()" class="bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-xl">+ เพิ่ม</button>
+        </div>
         <div id="item-list" class="space-y-3"></div>
     </div>
 
     <div class="fixed bottom-0 left-0 right-0 p-6 bg-white/80 backdrop-blur-xl border-t flex justify-between items-center z-50">
         <div>
-            <p class="text-[9px] text-slate-400 uppercase font-black">Monthly Cash Flow</p>
+            <p class="text-[9px] text-slate-400 uppercase font-black">Cash Flow</p>
             <p id="month-cf" class="text-2xl font-black">0</p>
         </div>
-        <button onclick="addItem()" class="bg-emerald-500 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-emerald-200 active:scale-90 transition-all">+ เพิ่มหนี้</button>
+        <button onclick="if(confirm('Reset?')) { localStorage.removeItem('debtProDB'); location.reload(); }" class="text-[10px] text-slate-300 font-bold">RESET DATA</button>
     </div>
 
     <script src="logic.js"></script>
